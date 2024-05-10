@@ -145,12 +145,31 @@ By implementing these steps, you establish a secure connection between your clie
 
 # Simple Verification Middleware
 
+## Making a middleware that console the cookies
+
 ```javascript
 const verifyToken = (req, res, next) => {
   const token = req?.cookies.token;
   console.log('token in middleware', token);
   next();
 };
+```
+
+## Use verifyToken() in a secret data route
+
+```javascript
+app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
+  console.log('cookies : ', req.cookies); // console the cookie
+  console.log(req.query.email);
+
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query.email };
+  }
+  const cursor = bookingsCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
 ```
 
 Then we use these middleware in the secure data middleware
