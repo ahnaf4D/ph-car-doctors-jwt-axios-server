@@ -10,7 +10,12 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://ph-cars-doctors.firebaseapp.com',
+      'https://ph-cars-doctors.web.app',
+    ],
     credentials: true,
   })
 );
@@ -43,6 +48,11 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+};
 async function run() {
   try {
     const serviceCollection = client.db('phCarDoctors').collection('Services');
@@ -53,17 +63,15 @@ async function run() {
       console.log(`user for token`, user);
       const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '2h' });
       res // save to browser cookie
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: true,
-        })
+        .cookie('token', token, cookieOptions)
         .send({ success: true });
     });
     app.post('/auth/logout', async (req, res) => {
       const user = req.body;
       console.log(`user logout`);
-      res.clearCookie('token', { maxAge: 0 }).send({ success: true });
+      res
+        .clearCookie('token', { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
     });
     // rest services apis
     app.get('/api/services', async (req, res) => {
