@@ -102,6 +102,43 @@ const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
 return () => unsubscribe();
 ```
 
+Certainly! Let's integrate the provided information into the README.md in a more beginner-friendly format:
+
 ---
 
-This simplified and organized README.md provides clear instructions for implementing JWT authentication on the server-side of the Ph Car Doctors project.
+## Secure API Calls
+
+To ensure secure communication between your client-side and server-side applications, follow these steps:
+
+1. **Server-Side Setup**:
+
+   - Install and use [Cookie Parser](https://expressjs.com/en/resources/middleware/cookie-parser.html) as middleware on the server side.
+   - This enables easy access to cookies sent by the client in HTTP requests.
+   - Example: `const cookieParser = require('cookie-parser'); app.use(cookieParser());`
+
+2. **Accessing Cookies on the Server**:
+
+   - Once Cookie Parser middleware is set up, you can access cookies using `req.cookies` in your Express route handlers.
+   - This allows you to retrieve tokens or other data stored in cookies sent by the client.
+
+3. **Client-Side API Calls**:
+   - When making API calls from the client side, ensure that cookies are included in the request for authentication purposes.
+   - If you're using Axios:
+     ```javascript
+     axios.post('http://your-api-endpoint', data, {
+       withCredentials: true,
+     });
+     ```
+   - If you're using the Fetch API:
+     ```javascript
+     fetch('http://your-api-endpoint', {
+       method: 'POST',
+       credentials: 'include',
+       headers: {
+         'Content-Type': 'application/json',
+       },
+       body: JSON.stringify(data),
+     });
+     ```
+
+By implementing these steps, you establish a secure connection between your client-side and server-side applications, ensuring that authenticated users can access protected resources while maintaining the integrity and confidentiality of your data.
