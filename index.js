@@ -30,8 +30,17 @@ const logger = (req, res, next) => {
 };
 const verifyToken = (req, res, next) => {
   const token = req?.cookies.token;
-  console.log('token in middleware', token);
-  next();
+  // console.log('token in middleware', token);
+  if (!token) {
+    return res.status(401).send({ massage: 'unauthorized access' });
+  }
+  jwt.verify(token, process.env.TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ massage: 'unauthorized access' });
+    }
+    req.user = decoded;
+    next();
+  });
 };
 async function run() {
   try {
@@ -71,9 +80,12 @@ async function run() {
       res.send(result);
     });
     app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
-      console.log('cookies : ', req.cookies); // console the cookie
+      console.log('token owner : ', req.user); // console the user from verifyToken()
       console.log(req.query.email);
-
+      // verify that specific user try to access his own secret or not
+      if (req.user.email !== req.query?.email) {
+        return res.status(403).send({ massage: 'Forbidden Access' });
+      }
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };

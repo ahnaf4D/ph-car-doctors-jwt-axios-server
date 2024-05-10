@@ -145,22 +145,30 @@ By implementing these steps, you establish a secure connection between your clie
 
 # Simple Verification Middleware
 
-## Making a middleware that console the cookies
+Sure, I'll organize and integrate the provided middleware and routes into the documentation:
+
+---
+
+## Middleware for Cookie Logging and Token Verification
+
+To enhance security and manage user authentication effectively, we'll create middleware to log cookies and verify JWT tokens.
+
+### Creating Middleware to Log Cookies
 
 ```javascript
 const verifyToken = (req, res, next) => {
   const token = req?.cookies.token;
-  console.log('token in middleware', token);
+  console.log('Token in middleware:', token);
   next();
 };
 ```
 
-## Use verifyToken() in a secret data route
+### Implementing `verifyToken()` in a Secure Data Route
 
 ```javascript
 app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
-  console.log('cookies : ', req.cookies); // console the cookie
-  console.log(req.query.email);
+  console.log('Cookies:', req.cookies); // Logging cookies
+  console.log('Requested Email:', req.query.email);
 
   let query = {};
   if (req.query?.email) {
@@ -172,4 +180,44 @@ app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
 });
 ```
 
-Then we use these middleware in the secure data middleware
+### Main Token Verification Middleware
+
+```javascript
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies.token;
+  if (!token) {
+    return res.status(401).send({ message: 'Unauthorized access' });
+  }
+  jwt.verify(token, process.env.TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'Unauthorized access' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+```
+
+### Verifying Specific User Access
+
+```javascript
+app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
+  console.log('Token owner:', req.user); // Logging the user from verifyToken()
+  console.log('Requested Email:', req.query.email);
+
+  // Verify if the specific user is trying to access their own data
+  if (req.user.email !== req.query?.email) {
+    return res.status(403).send({ message: 'Forbidden Access' });
+  }
+
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query.email };
+  }
+  const cursor = bookingsCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+```
+
+By integrating these middleware and routes, you ensure that only authenticated users can access sensitive data, maintaining the security and integrity of your application.
