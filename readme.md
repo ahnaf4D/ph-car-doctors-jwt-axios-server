@@ -142,3 +142,15 @@ To ensure secure communication between your client-side and server-side applicat
      ```
 
 By implementing these steps, you establish a secure connection between your client-side and server-side applications, ensuring that authenticated users can access protected resources while maintaining the integrity and confidentiality of your data.
+
+# Simple Verification Middleware
+
+```javascript
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies.token;
+  console.log('token in middleware', token);
+  next();
+};
+```
+
+Then we use these middleware in the secure data middleware

@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 app.use(
   cors({
     origin: ['http://localhost:5173', 'http://localhost:5174'],
@@ -21,13 +23,22 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
+// middlewares
+const logger = (req, res, next) => {
+  console.log('log info ', req.method, req.url);
+  next();
+};
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies.token;
+  console.log('token in middleware', token);
+  next();
+};
 async function run() {
   try {
     const serviceCollection = client.db('phCarDoctors').collection('Services');
     const bookingsCollection = client.db('phCarDoctors').collection('Bookings');
     // auth related apis
-    app.post('/auth/jwt', (req, res) => {
+    app.post('/auth/jwt', logger, (req, res) => {
       const user = req.body;
       console.log(`user for token`, user);
       const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '1h' });
@@ -59,8 +70,10 @@ async function run() {
       const result = await serviceCollection.findOne(query, options);
       res.send(result);
     });
-    app.get('/api/bookings/', async (req, res) => {
+    app.get('/api/bookings/', logger, verifyToken, async (req, res) => {
+      console.log('cookies : ', req.cookies); // console the cookie
       console.log(req.query.email);
+
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
