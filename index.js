@@ -50,7 +50,7 @@ async function run() {
     app.post('/auth/jwt', logger, (req, res) => {
       const user = req.body;
       console.log(`user for token`, user);
-      const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '1h' });
+      const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '2h' });
       res // save to browser cookie
         .cookie('token', token, {
           httpOnly: true,
